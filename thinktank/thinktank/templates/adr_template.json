@@ -1,0 +1,38 @@
+{
+  "$schema": "thinktank-adr-v1",
+  "id": "adr-<YYYYMMDD>-<short-topic>",
+  "title": "<Human-readable title of the decision>",
+  "date": "<YYYY-MM-DD>",
+  "status": "active",
+  "mode": "full | fast",
+  "tags": ["<topic-tag-1>", "<topic-tag-2>"],
+  "context": "<1-2 sentences describing what problem or proposal triggered this ADR>",
+  "decision": "<1-2 sentences describing exactly what was decided>",
+  "guardrails": [
+    "<Strict rule 1 that must be enforced in future decisions>",
+    "<Strict rule 2>",
+    "<Strict rule 3 (add as many as needed)>"
+  ],
+  "rejected_alternatives": [
+    {
+      "option": "<Alternative that was considered>",
+      "reason": "<Why it was rejected>"
+    }
+  ],
+  "scores": {
+    "reversibility": { "score": 0, "confidence": "high | medium | low" },
+    "ops_cost": { "score": 0, "confidence": "high | medium | low" },
+    "delivery_speed": { "score": 0, "confidence": "high | medium | low" },
+    "scalability": { "score": 0, "confidence": "high | medium | low" },
+    "developer_experience": { "score": 0, "confidence": "high | medium | low" },
+    "weighted_total": 0.0
+  },
+  "killer_objection": {
+    "raised": false,
+    "by": null,
+    "objection": null,
+    "resolution": null
+  },
+  "deciding_factor": "<The single argument The Judge cited as the tipping point>",
+  "personas_involved": ["Architect", "Historian", "Paranoid", "CFO", "Greybeard", "PM", "Judge"]
+}
