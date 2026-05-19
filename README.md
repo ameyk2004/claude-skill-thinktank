@@ -48,13 +48,24 @@ Upon your approval, ThinkTank silently locks the design by writing a persistent 
 
 ## Usage
 
-You can seamlessly import the Zero-Dependency ThinkTank skill directly into your local Claude Code environment.
+You can seamlessly import the Zero-Dependency ThinkTank skill directly into your local Claude environment.
 
 ### 1. Installation
-Locate the `thinktank.skill` file in this repository and run the following command in your terminal:
+
+First, download the `thinktank.skill` file:
+[📥 Download thinktank.skill](https://drive.google.com/file/d/1FYr2z2Ba-mBZhKDlReMR20bztCU5AtDN/view?usp=sharing)
+
+#### Option A: Claude Code (CLI)
+Run the following command in your terminal where the file was downloaded:
 ```bash
 claude skill add thinktank.skill
 ```
+
+#### Option B: Claude Desktop or Web
+1. Open Claude Desktop or claude.ai in your browser.
+2. **Enable the Skill Creator:** Go to **Settings > Capabilities > Skills** and ensure that the Skill Creator is toggled on.
+3. **Upload the Skill:** Go to **Customize > Skills**, click the `+` button, and select **+ Create skill > Upload a skill**.
+4. Drop your downloaded `thinktank.skill` file into the upload box.
 
 ### 2. Triggering the Workflow
 To initiate the full architectural engine, use the `ThinkTank:` prefix:
