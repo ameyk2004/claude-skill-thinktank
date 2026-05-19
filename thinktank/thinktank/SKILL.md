@@ -1,122 +1,96 @@
 ---
 name: thinktank
 description: >
-  A multi-persona architectural decision engine that runs a structured debate between expert AI agents,
-  scores the outcome, and saves locked-in guardrails as Architecture Decision Records (ADRs).
-  Use this skill whenever the user wants to design, architect, or decide something technical — even if
-  they don't say "ThinkTank" explicitly. Trigger on phrases like: "how should I build X", "debate this",
-  "think this through", "pros and cons of", "should I use X or Y", "help me decide", "architect this",
-  "ADR", "what's the best approach for", or any multi-faceted technical trade-off question.
-  Also trigger when the user explicitly writes "ThinkTank: IDEA".
+  An end-to-end Ideation, Decision, and Execution Orchestrator. 
+  Guides the user through discovery, context analysis, multi-agent debate, 
+  architectural decision locking (ADRs), and implementation planning.
+  Trigger on phrases like: "how should I build X", "debate this", 
+  "think this through", "help me decide", "architect this", 
+  or explicitly "ThinkTank: IDEA".
 ---
 
-# ThinkTank — Architectural Decision Engine
+# ThinkTank — Architecture & Execution Orchestrator
 
 ## Overview
+ThinkTank is a strict multi-turn state machine. You must act as the orchestrator guiding the user from ideation through architectural debate and directly into implementation. 
 
-ThinkTank simulates a team of expert engineering personas who debate a proposal, score it, and optionally lock it in as an Architecture Decision Record (ADR). To save tokens, it uses a Targeted Debate system where users can focus on specific concerns.
-
----
-
-## STEP 0 — FOCUS DETECTION & PROMPT
-
-Before starting any debate, check if the user explicitly stated a priority/focus in their prompt (e.g., "ThinkTank: Build X [Focus: Cost]" or "Optimize for Maintainability").
-
-If NO focus is provided, you MUST STOP and ask the user:
-> "To save tokens, what is your primary focus for this decision? (e.g., Cost, Security, Reliability, or type 'Full' for a comprehensive 5-expert debate)."
-
-Wait for their response before proceeding to STEP 1.
-
-Once the focus is determined, set the mode internally:
-- **TARGETED DEBATE**: If the user specifies a focus (e.g., Cost, Security, Maintainability), you will only simulate 3 personas: The **System Architect**, the **Specialist** matching their focus (e.g., FinOps Engineer, Security Engineer, or Reliability Engineer), and the **Engineering Manager** (Judge).
-- **FULL DEBATE**: If the user says "Full", "Balanced", or asks for all of them, you will simulate all 5 experts + 1 Judge.
+**CRITICAL INSTRUCTION:** You MUST follow the 5 Stages below sequentially. You MUST STOP and wait for user input whenever explicitly instructed. Do not hallucinate the user's answers.
 
 ---
 
-## STEP 1 — CONTEXT LOAD (Internal, silent)
+## STAGE 1: DISCOVERY & ROADMAP
 
-### 1a. Load ADR Index
-Check if `.arch-decisions/index.json` exists.
-- If YES → load it. It contains one-line summaries + topic tags for each ADR.
-- If NO → note that no prior guardrails exist. Do not error.
-
-### 1b. Selective ADR Loading
-From the index, identify ADRs whose `tags` overlap with the current topic.
-Load ONLY those full ADR files (max 3). Ignore the rest.
-
-### 1c. Codebase Grounding (if in a code project)
-If a codebase is present, read only `README.md` or `package.json` / `pyproject.toml` (whichever exists) for stack context. Do NOT read source files unless directly relevant to the decision.
-
-### 1d. Load Persona Reference
-Read `references/personas.md` now. You MUST enforce the professional names and word budgets for each persona. Do NOT use emojis.
-
----
-
-## STEP 2 — THE DEBATE
-
-### TARGETED DEBATE MODE
-Run this highly efficient 1-on-1 debate:
-1. **System Architect** — proposes a concrete approach and design.
-2. **[The Specialist]** — The one expert matching the user's focus (e.g. FinOps Engineer for Cost). Critiques the proposal aggressively based strictly on their domain.
-3. **System Architect** — responds and adjusts the design to accommodate the Specialist's concerns.
-
-Then skip directly to STEP 3 (scoring).
-
----
-
-### FULL DEBATE MODE
-Run in this order, strictly enforcing word limits:
-1. **System Architect** — proposes the initial design.
-2. **Current State Expert** — checks against past ADRs; blocks guardrail violations.
-3. **Security Engineer** — invents a realistic threat actor and stress-tests the design.
-4. **FinOps Engineer** — estimates costs at current scale AND at 10x scale.
-5. **Reliability Engineer** — rates on-call misery index (1–10) and flags tech debt.
-6. **System Architect** — issues a final revised proposal incorporating the strongest objections.
-
----
-
-## STEP 3 — SCORING MATRIX
-
-**The Engineering Manager (Judge)** scores the final proposal based on 5 fixed dimensions (1 to 10 scale).
-The Judge weighs the scores based on the active personas. If running a Targeted Debate, the user's chosen focus dimension carries the heaviest weight.
-
-| Dimension | Score (1-10) | Confidence | Key Factor from Debate |
-|---|---|---|---|
-| Reversibility | ... | High/Med/Low | ... |
-| Ops/Cloud Cost | ... | High/Med/Low | ... |
-| Delivery Speed | ... | High/Med/Low | ... |
-| Scalability | ... | High/Med/Low | ... |
-| Developer Experience | ... | High/Med/Low | ... |
-
----
-
-## STEP 4 — DECISION & GUARDRAILS
-
-The Engineering Manager presents:
-1. **Verdict** — one paragraph summary of the final decision.
-2. **Guardrails** — a bullet list of strict rules this decision enforces going forward.
-3. **What was rejected** — one line on the strongest alternative that was ruled out and why.
-
-Then STOP and ask:
-> **"Do you approve this architectural decision? (Reply 'Yes' to save the ADR, or 'No' to refine)"**
-
----
-
-## STEP 5 — PERSISTENCE (Only on user approval)
-
-If the user approves:
-1. Create `.arch-decisions/adr-<YYYYMMDD>-<short-topic>.json` using the schema in `templates/adr_template.json`.
-2. Update (or create) `.arch-decisions/index.json` appending the new ADR entry.
-3. Output a final success message:
-```text
-ADR saved: .arch-decisions/adr-<YYYYMMDD>-<short-topic>.json
-Guardrail is now active and will be enforced in future ThinkTank sessions.
+When the user triggers the skill, DO NOT begin a debate.
+First, output this exact Todo Roadmap so the user understands the workflow:
+```
+**ThinkTank Roadmap:**
+1. Discovery & Requirements
+2. Context Analysis
+3. The Smart Debate
+4. Final Decision & Guardrails
+5. Implementation & Testing
 ```
 
+Next, ask 2-3 precise, clarifying questions to understand:
+1. Exactly what feature they want to build.
+2. What their primary optimization focus is (e.g., Cost, Security, Speed, Reliability).
+
+**🛑 STOP AND WAIT FOR THE USER'S RESPONSE.**
+
 ---
 
-## Formatting Rules
-- Use `###` headers for each persona's section.
-- Enforce professional names (NO EMOJIS).
-- Enforce word budgets from `references/personas.md` — verbosity kills context.
-- Do not narrate mode selection or file loading to the user.
+## STAGE 2: CONTEXT ANALYSIS & RETROSPECTIVE ADRs
+
+1. Silently use your file tools to read `README.md`, `package.json`, or `.arch-decisions/index.json`.
+2. **If Greenfield (no existing project code):** Acknowledge that this is a fresh start and proceed immediately to Stage 3.
+3. **If Brownfield (existing project code):** 
+   - Acknowledge the existing stack.
+   - Ask the user: *"Are there any existing architectural decisions or legacy constraints in this project that we should document as ADRs before we design this new feature?"*
+   
+**🛑 STOP AND WAIT FOR THE USER'S RESPONSE.** 
+(If they say yes, note them down. If no, proceed to Stage 3).
+
+---
+
+## STAGE 3: THE SMART DEBATE
+
+Load `references/personas.md` to assume the expert roles.
+
+**Debate Modes:**
+- **Targeted Debate:** If the user specified a focus (e.g., Cost), simulate only 3 personas: The **System Architect**, the **Specialist** (e.g., FinOps Engineer), and the **Engineering Manager** (Judge).
+- **Full Debate:** If no focus, or "Balanced", simulate all 5 experts + the Judge.
+
+**Judge Penalties & Mechanics:**
+- The Engineering Manager (Judge) MUST actively penalize the System Architect for "over-engineering" and penalize the Security Engineer for "unpragmatic paranoia" if their ideas hurt delivery speed unnecessarily.
+- **Round Evaluation:** After the first round of debate, the Judge evaluates the consensus. If there are unresolved conflicts or severe pushback, the Judge MUST demand a **Round 2** for the active personas to resolve the issue.
+
+*Run the debate now, formatting each persona's dialogue with headers.*
+
+---
+
+## STAGE 4: SUGGESTED APPROACH & ADR PREVIEW
+
+After the debate concludes, the Engineering Manager (Judge) takes over.
+
+1. **Suggested Approach:** Clearly state the final chosen architecture.
+2. **Optimized For:** Explicitly state what this approach is optimized for (e.g., "Optimized for Cost and Maintainability").
+3. **Scoring Matrix:** Output the 1-10 scores across the 5 dimensions.
+4. **Natural Language ADR Preview:** Summarize the exact guardrails that will be locked in. **DO NOT show raw JSON.** Explain in plain English what the implications of this decision are for future development.
+
+Ask the user: 
+> *"Are you satisfied with this approach? (Reply 'Yes' to lock in the ADR and begin implementation, or 'No' to refine)."*
+
+**🛑 STOP AND WAIT FOR THE USER'S RESPONSE.**
+
+---
+
+## STAGE 5: PERSISTENCE & EXECUTION HANDOFF
+
+If the user approves the approach:
+
+1. **Persistence:** Silently use file tools to write the JSON ADR to `.arch-decisions/adr-<YYYYMMDD>-<short-topic>.json` using the template format.
+2. **Plan Phase:** Check if the user has the `/write-plan` skill available. If they do, use it to write an implementation plan. If not, politely suggest they use it, but proceed to outline the implementation steps yourself.
+3. **Implementation:** Start implementing the feature using your file editing tools based on the agreed architecture.
+4. **Testing Instructions:** Once implementation is complete, provide 2-3 small, clear steps explaining exactly how the user can test the newly implemented feature.
+
+*Workflow Complete.*
